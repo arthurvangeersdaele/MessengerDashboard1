@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mobile Dashboard</title>
+
+<style>
+    :root {
+        --sea-blue: #006994;
+        --sky-blue: #40cfff;
+        --white: #ffffff;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        color: var(--white);
+    }
+
+    .overlay {
+        background: rgba(0, 0, 0, 0.35);
+        height: 100%;
+        width: 100%;
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+    }
+
+    h1 {
+        margin: 0 0 20px 0;
+        font-size: 1.8rem;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .button-container {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding-bottom: 20px;
+    }
+
+    .dashboard-btn {
+        width: 100%;
+        padding: 15px;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        background: var(--sea-blue);
+        color: var(--white);
+        border: none;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+    .dashboard-btn:hover {
+        background: var(--sky-blue);
+        color: var(--sea-blue);
+    }
+</style>
+
+</head>
+
+<body>
+
+<script>
+    // Array of background image URLs (you can add/remove as many as you want)
+    const backgrounds = [
+        "https://unsplash.com/fr/photos/plan-deau-bleu-et-clair-K785Da4A_JA",
+        "https://unsplash.com/fr/photos/vagues-deferlantes-5cwigXmGWTo",
+        "https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1565643355044-000fbad87cc5?q=80&w=627&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    ];
+
+    // Select background based on the current day index
+    const today = new Date().getDay();
+    document.body.style.backgroundImage = `url('${backgrounds[today % backgrounds.length]}')`;
+</script>
+
+<div class="overlay">
+    <h1>$Easy-refs</h1>
+
+```
+<div class="button-container">
+    <a href="https://example.com" class="dashboard-btn">Example Link</a>
+    <a href="https://google.com" class="dashboard-btn">Google</a>
+    <a href="https://openai.com" class="dashboard-btn">OpenAI</a>
+    <a href="https://github.com" class="dashboard-btn">GitHub</a>
+    <a href="https://wikipedia.org" class="dashboard-btn">Wikipedia</a>
+    <a href="https://mozilla.org" class="dashboard-btn">Mozilla</a>
+    <a href="https://your-url-1.com" class="dashboard-btn">Your Link 1</a>
+    <a href="https://your-url-2.com" class="dashboard-btn">Your Link 2</a>
+    <a href="https://your-url-3.com" class="dashboard-btn">Your Link 3</a>
+    <!-- Add more buttons if needed -->
+</div>
+```
+
+</div>
+
+</body>
+</html>
