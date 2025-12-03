@@ -7,7 +7,7 @@
 
 <style>
     :root {
-        --sea-blue: #006994;
+        --sea-blue: #006994; /* default, overwritten dynamically */
         --sky-blue: #40cfff;
         --white: #ffffff;
     }
@@ -16,7 +16,7 @@
         margin: 0;
         padding: 0;
         width: 100%;
-        overflow-x: hidden; /* FULLY disable x-scroll */
+        overflow-x: hidden;
         font-family: Arial, sans-serif;
     }
 
@@ -38,7 +38,7 @@
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        overflow-x: hidden; /* Ensure overlay never causes scroll */
+        overflow-x: hidden;
     }
 
     h1 {
@@ -51,18 +51,17 @@
     .button-container {
         flex: 1;
         overflow-y: auto;
-        overflow-x: hidden; /* Prevent any horizontal overflow */
+        overflow-x: hidden;
         display: flex;
         flex-direction: column;
         gap: 15px;
         padding-bottom: 20px;
-        width: 100%; /* ensure it never exceeds viewport */
+        width: 100%;
         box-sizing: border-box;
     }
 
     .dashboard-btn {
         width: 100%;
-        max-width: 100%; /* Extra safety */
         padding: 15px;
         text-align: center;
         font-size: 1.1rem;
@@ -72,7 +71,7 @@
         border: none;
         border-radius: 10px;
         text-decoration: none;
-        box-sizing: border-box; /* prevents overflow */
+        box-sizing: border-box;
         transition: 0.2s;
     }
 
@@ -81,33 +80,129 @@
         color: var(--white);
     }
 </style>
-
 </head>
 
 <body>
 
 <script>
-    const backgrounds = [
-        "https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1074&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1565643355044-000fbad87cc5?q=80&w=627&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1501959915551-4e8a04a3ad65?q=80&w=1000&auto=format&fit=crop"
-    ];
+/* -----------------------------
+   1) Background list
+------------------------------*/
+const backgrounds = [
+    "https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1074&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1565643355044-000fbad87cc5?q=80&w=627&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop",
+    "https://plus.unsplash.com/premium_photo-1675349740433-5583799ae427?q=80&w=828&auto=format&fit=crop"
+];
 
-    const today = new Date().getDay();
-    document.body.style.backgroundImage = `url('${backgrounds[today % backgrounds.length]}')`;
+const today = new Date().getDay();
+const bgURL = backgrounds[today % backgrounds.length];
+document.body.style.backgroundImage = `url('${bgURL}')`;
+
+/* -----------------------------
+   2) Dominant color via K-means
+------------------------------*/
+async function getDominantColorKMeans(url, k = 5, sampleSize = 8000) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            const pixels = [];
+            const total = width * height;
+            const step = Math.max(1, Math.floor(total / sampleSize));
+
+            for (let i = 0; i < data.length; i += 4 * step) {
+                pixels.push([data[i], data[i + 1], data[i + 2]]);
+            }
+
+            const centroids = [];
+            for (let i = 0; i < k; i++) {
+                centroids.push(pixels[Math.floor(Math.random() * pixels.length)]);
+            }
+
+            const dist = (p, c) =>
+                Math.sqrt((p[0] - c[0])**2 + (p[1] - c[1])**2 + (p[2] - c[2])**2);
+
+            function assign() {
+                const clusters = Array.from({ length: k }, () => []);
+                for (const p of pixels) {
+                    let min = 0;
+                    let minDist = Infinity;
+                    for (let i = 0; i < k; i++) {
+                        const d = dist(p, centroids[i]);
+                        if (d < minDist) {
+                            minDist = d;
+                            min = i;
+                        }
+                    }
+                    clusters[min].push(p);
+                }
+                return clusters;
+            }
+
+            function update(clusters) {
+                return clusters.map((cluster, idx) => {
+                    if (cluster.length === 0) return centroids[idx];
+                    const sum = cluster.reduce((a, p) =>
+                        [a[0]+p[0], a[1]+p[1], a[2]+p[2]], [0,0,0]);
+                    return sum.map(v => Math.round(v / cluster.length));
+                });
+            }
+
+            for (let i = 0; i < 8; i++) {
+                const clusters = assign();
+                const newC = update(clusters);
+                newC.forEach((c, i) => centroids[i] = c);
+            }
+
+            const finalClusters = assign();
+            const idxMax = finalClusters.reduce(
+                (maxI, cluster, i, arr) => cluster.length > arr[maxI].length ? i : maxI,
+                0
+            );
+
+            const [r, g, b] = centroids[idxMax];
+            resolve(`rgb(${r}, ${g}, ${b})`);
+        };
+
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
+/* -----------------------------
+   3) Apply dominant color to CSS
+------------------------------*/
+getDominantColorKMeans(bgURL)
+    .then(color => {
+        document.documentElement.style.setProperty("--sea-blue", color);
+    })
+    .catch(err => {
+        console.error("Dominant color error:", err);
+    });
 </script>
 
 <div class="overlay">
     <h1>Quick-refs</h1>
 
     <div class="button-container">
-        <a href="https://uclouvain-my.sharepoint.com/:x:/g/personal/arthur_vangeersdaele_uclouvain_be/EYu8a7NZjBhFo78wpvnEgoABytM9xhBb6gHplRjg7bt3Sw?e=uZatB8" class="dashboard-btn">
-            Plan d'étude
+        <a href="https://uclouvain-my.sharepoint.com/:x:/g/personal/arthur_vangeersdaele_uclouvain_be/EYu8a7NZjBhFo78wpvnEgoABytM9xhBb6gHplRjg7bt3Sw?e=uZatB8"
+           class="dashboard-btn">
+           Plan d'étude
         </a>
 
-        <a href="https://media.tenor.com/sR6tkmxxrhQAAAAM/depressed-bored.gif" class="dashboard-btn">
-            Gif préféré d'Arthur
+        <a href="https://media.tenor.com/sR6tkmxxrhQAAAAM/depressed-bored.gif"
+           class="dashboard-btn">
+           Gif préféré d'Arthur
         </a>
     </div>
 </div>
